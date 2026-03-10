@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c0bfb9717db2cf4dae6ace9dd088e41, type: 3}
+  m_Name: TilemapConfig
+  m_EditorClassIdentifier: 
+  waterTilemapRef: {fileID: 0}
+  landTilemapRef: {fileID: 0}
+  mountainTilemapRef: {fileID: 0}
+  cliffTilemapRef: {fileID: 0}
+  elementsTilemapRef: {fileID: 0}
+  waterTilemapObject: {fileID: 0}
+  landTilemapObject: {fileID: 0}
+  mountainTilemapObject: {fileID: 0}
+  cliffTilemapObject: {fileID: 0}
+  elementsTilemapObject: {fileID: 0}
+  waterRuleTile: {fileID: 11400000, guid: f5d7562feb278b049ab682f2dfa66855, type: 2}
+  landRuleTile: {fileID: 11400000, guid: 716470c1a75235a4a97c009c3010a2d7, type: 2}
+  mountainRuleTile: {fileID: 11400000, guid: f07d28ca000b37d4a8f4860fb709d9a4, type: 2}
+  cliffRuleTile: {fileID: 11400000, guid: 9c7aa537648b951459d7380ef753bce9, type: 2}

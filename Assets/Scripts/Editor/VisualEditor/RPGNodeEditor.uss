@@ -1,0 +1,44 @@
+/* RPG Node Editor Styles */
+
+.unity-editor-window {
+    background-color: #2d2d2d;
+}
+
+.unity-toolbar {
+    background-color: #3c3c3c;
+    border-bottom-width: 1px;
+    border-bottom-color: #555555;
+    padding: 5px;
+}
+
+.unity-toolbar .unity-button {
+    background-color: #4a4a4a;
+    border-width: 1px;
+    border-color: #666666;
+    border-radius: 3px;
+    padding: 5px 10px;
+    margin-right: 5px;
+    color: #ffffff;
+}
+
+.unity-toolbar .unity-button:hover {
+    background-color: #5a5a5a;
+}
+
+.unity-toolbar .unity-button:active {
+    background-color: #404040;
+}
+
+.unity-toolbar-spacer {
+    flex-grow: 1;
+}
+
+/* Status Bar */
+.status-bar {
+    background-color: #2a2a2a;
+    border-top-width: 1px;
+    border-top-color: #555555;
+    padding: 5px 10px;
+    color: #ffffff;
+    font-size: 12px;
+} 

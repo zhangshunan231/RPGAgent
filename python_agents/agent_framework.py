@@ -23,14 +23,17 @@ from narrative_agent import create_narrative_agent
 from scene_agent import create_scene_agent
 from mechanism_agent import create_mechanism_agent
 from codegen_agent import create_codegen_agent
+from data_collector import get_collector
 
 # 多Agent协作流程
 
-def run_multi_agent_process(user_input: str):
+def run_multi_agent_process(user_input: str, collect_data=True):
     narrative_agent = create_narrative_agent()
     scene_agent = create_scene_agent()
     mechanism_agent = create_mechanism_agent()
     codegen_agent = create_codegen_agent()
+    
+    collector = get_collector() if collect_data else None
 
     narrative_response = narrative_agent.generate_reply(
         messages=[{"role": "user", "content": user_input}]
@@ -42,6 +45,15 @@ def run_multi_agent_process(user_input: str):
         story_data = narrative_response
     else:
         story_data = ""
+    
+    # 收集 NarrativeAgent 数据（暂时禁用，先只 fine-tune SceneAgent）
+    # if collector and story_data:
+    #     collector.log_interaction(
+    #         "NarrativeAgent",
+    #         narrative_agent.system_message,
+    #         user_input,
+    #         story_data
+    #     )
 
     scene_response = scene_agent.generate_reply(
         messages=[{"role": "user", "content": story_data}]
@@ -53,6 +65,15 @@ def run_multi_agent_process(user_input: str):
         scene_data = scene_response
     else:
         scene_data = ""
+    
+    # 收集 SceneAgent 数据
+    if collector and scene_data:
+        collector.log_interaction(
+            "SceneAgent",
+            scene_agent.system_message,
+            story_data,
+            scene_data
+        )
 
     mechanism_response = mechanism_agent.generate_reply(
         messages=[{"role": "user", "content": f"故事和场景参数如下：\n{story_data}\n{scene_data}"}]

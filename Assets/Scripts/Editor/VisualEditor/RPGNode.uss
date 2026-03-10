@@ -1,0 +1,168 @@
+/* RPG Node Styles */
+
+.unity-node {
+    background-color: #3c3c3c;
+    border-width: 2px;
+    border-color: #666666;
+    border-radius: 5px;
+    padding: 10px;
+    min-width: 200px;
+    max-width: 400px;
+}
+
+.unity-node:hover {
+    border-color: #888888;
+}
+
+.unity-node.selected {
+    border-color: #4a9eff;
+    border-width: 3px;
+}
+
+.unity-node-title {
+    background-color: #4a4a4a;
+    color: #ffffff;
+    font-weight: bold;
+    padding: 5px 10px;
+    margin: -10px -10px 10px -10px;
+    border-radius: 3px 3px 0px 0px;
+}
+
+/* Port Styles */
+.unity-port {
+    background-color: #555555;
+    border-width: 2px;
+    border-color: #777777;
+    border-radius: 10px;
+    width: 20px;
+    height: 20px;
+}
+
+.unity-port:hover {
+    background-color: #666666;
+    border-color: #888888;
+}
+
+.unity-port.connected {
+    background-color: #4a9eff;
+    border-color: #2d7dd2;
+}
+
+/* Input/Output Container */
+.unity-input-container,
+.unity-output-container {
+    margin: 5px 0px;
+}
+
+.unity-port-label {
+    color: #ffffff;
+    font-size: 12px;
+    margin: 0px 5px;
+}
+
+/* Text Fields */
+.unity-text-field {
+    background-color: #2a2a2a;
+    border-width: 1px;
+    border-color: #555555;
+    border-radius: 3px;
+    color: #ffffff;
+    padding: 5px;
+    margin: 5px 0px;
+}
+
+.unity-text-field:focus {
+    border-color: #4a9eff;
+}
+
+.unity-text-area {
+    background-color: #2a2a2a;
+    border-width: 1px;
+    border-color: #555555;
+    border-radius: 3px;
+    color: #ffffff;
+    padding: 5px;
+    margin: 5px 0px;
+    min-height: 60px;
+}
+
+.unity-text-area:focus {
+    border-color: #4a9eff;
+}
+
+/* Buttons */
+.unity-button {
+    background-color: #4a4a4a;
+    border-width: 1px;
+    border-color: #666666;
+    border-radius: 3px;
+    color: #ffffff;
+    padding: 5px 10px;
+    margin: 5px 0px;
+    font-size: 12px;
+}
+
+.unity-button:hover {
+    background-color: #5a5a5a;
+}
+
+.unity-button:active {
+    background-color: #404040;
+}
+
+.unity-button:disabled {
+    background-color: #333333;
+    color: #666666;
+    border-color: #444444;
+}
+
+/* Labels */
+.unity-label {
+    color: #ffffff;
+    font-size: 12px;
+    margin: 5px 0px;
+}
+
+/* Sliders */
+.unity-slider {
+    margin: 5px 0px;
+}
+
+.unity-slider .unity-slider-tracker {
+    background-color: #4a9eff;
+}
+
+.unity-slider .unity-slider-dragger {
+    background-color: #ffffff;
+    border-width: 1px;
+    border-color: #cccccc;
+}
+
+/* Object Fields */
+.unity-object-field {
+    margin: 5px 0px;
+}
+
+.unity-object-field .unity-object-field__input {
+    background-color: #2a2a2a;
+    border-width: 1px;
+    border-color: #555555;
+    border-radius: 3px;
+    color: #ffffff;
+}
+
+/* Integer/Float Fields */
+.unity-integer-field,
+.unity-float-field {
+    margin: 5px 0px;
+}
+
+.unity-integer-field .unity-integer-field__input,
+.unity-float-field .unity-float-field__input {
+    background-color: #2a2a2a;
+    border-width: 1px;
+    border-color: #555555;
+    border-radius: 3px;
+    color: #ffffff;
+    padding: 3px;
+} 
