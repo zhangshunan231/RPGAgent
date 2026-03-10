@@ -808,10 +808,17 @@ public class MultiAgentRPGEditor : EditorWindow
             }
             EditorGUILayout.EndScrollView();
             EditorGUILayout.Space();
+            EditorGUILayout.BeginHorizontal();
             GUI.enabled = !isGeneratingNarrative && serverStatus == "Connected";
             if (GUILayout.Button("Regenerate Story"))
                 GenerateNarrative();
             GUI.enabled = true;
+            if (GUILayout.Button("Clear Narrative"))
+            {
+                narrativeData = null;
+                isNarrativeComplete = false;
+            }
+            EditorGUILayout.EndHorizontal();
         }
         EditorGUILayout.BeginHorizontal();
         if (GUILayout.Button("Load Narrative Data"))
