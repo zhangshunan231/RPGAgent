@@ -757,10 +757,18 @@ public class MultiAgentRPGEditor : EditorWindow
         EditorGUILayout.LabelField("Please input your RPG story idea:");
         userInput = EditorGUILayout.TextArea(userInput, wordWrapStyle, GUILayout.Height(60));
 
+        EditorGUILayout.BeginHorizontal();
         GUI.enabled = !string.IsNullOrEmpty(userInput) && !isGeneratingNarrative && serverStatus == "Connected";
         if (GUILayout.Button(isGeneratingNarrative ? "Generating..." : "Generate Story"))
             GenerateNarrative();
+        GUI.enabled = !string.IsNullOrEmpty(userInput);
+        if (GUILayout.Button("Clear Input"))
+        {
+            userInput = "";
+            GUI.FocusControl(null);
+        }
         GUI.enabled = true;
+        EditorGUILayout.EndHorizontal();
 
         if (narrativeData != null)
         {
