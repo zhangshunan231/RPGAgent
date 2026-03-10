@@ -1,0 +1,64 @@
+﻿{
+    "assets": [
+        {
+            "name": "Shunan",
+            "type": "maincharacter",
+            "aliases": [],
+            "description": "A Hero"
+        },
+        {
+            "name": "NPC1",
+            "type": "npc",
+            "aliases": [],
+            "description": "Friends of Main Character"
+        },
+        {
+            "name": "NPC2",
+            "type": "npc",
+            "aliases": [],
+            "description": "A ranger appeared in a place where monsters frequently appeared."
+        },
+        {
+            "name": "enemy1",
+            "type": "enemy",
+            "aliases": [],
+            "description": "The evil and fire-spitting enemy"
+        },
+        {
+            "name": "enemy2",
+            "type": "enemy",
+            "aliases": [],
+            "description": "A very powerful and clumsy enemy"
+        },
+        {
+            "name": "enemy3",
+            "type": "enemy",
+            "aliases": [],
+            "description": "A slimy substance full of mucus"
+        },
+        {
+            "name": "sword1",
+            "type": "props",
+            "aliases": [],
+            "description": "The ancient weapon used to slay demons"
+        },
+        {
+            "name": "sword2",
+            "type": "props",
+            "aliases": [],
+            "description": "A magical sword that can deal a great deal of damage to enemies."
+        },
+        {
+            "name": "Star",
+            "type": "props",
+            "aliases": [],
+            "description": "A star imbued with magic"
+        },
+        {
+            "name": "Scroll",
+            "type": "props",
+            "aliases": [],
+            "description": "A star imbued with magic"
+        }
+    ]
+}

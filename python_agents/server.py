@@ -1,0 +1,358 @@
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import json
+
+app = Flask(__name__)
+CORS(app)  # 允许跨域请求
+
+@app.route('/generate_narrative', methods=['POST'])
+def generate_narrative():
+    try:
+        data = request.get_json() or {}
+        user_input = data.get('input', '')
+        
+        # 添加详细的调试输出
+        print(f"[DEBUG] === 叙事Agent调用开始 ===")
+        print(f"[DEBUG] 接收到的原始数据: {data}")
+        print(f"[DEBUG] 提取的user_input: '{user_input}'")
+        print(f"[DEBUG] user_input长度: {len(user_input)}")
+        print(f"[DEBUG] user_input类型: {type(user_input)}")
+        if user_input:
+            print(f"[DEBUG] user_input前100字符: {user_input[:100]}...")
+        print(f"[DEBUG] ================================")
+        
+        # 只调用叙事Agent
+        from narrative_agent import create_narrative_agent
+        agent = create_narrative_agent()
+        response = agent.generate_reply(messages=[{"role": "user", "content": user_input}])
+        print(f"[叙事Agent返回] {response}")
+        
+        # 处理返回结果
+        if isinstance(response, dict):
+            result = response.get("content", str(response))
+        elif isinstance(response, str):
+            result = response
+        else:
+            result = str(response)
+        
+        return jsonify({'result': result, 'status': 'success'})
+    except Exception as e:
+        return jsonify({'result': f'Error: {str(e)}', 'status': 'error'})
+
+@app.route('/generate_scene', methods=['POST'])
+def generate_scene():
+    try:
+        data = request.get_json() or {}
+        narrative_input = data.get('input', '')
+        
+        # 检查是否存在资产文件
+        import os
+        assets_file_path = 'narrative_assets.json'
+        if os.path.exists(assets_file_path):
+            file_time = os.path.getmtime(assets_file_path)
+            import time
+            if time.time() - file_time < 300:  # 5分钟内的文件认为是新的
+                print("[DEBUG] 使用现有的资产文件")
+            else:
+                print("[WARNING] 资产文件较旧，建议手动导出: Tools -> 导出AssetIndex为JSON")
+        else:
+            print("[WARNING] 未找到资产文件，请手动导出: Tools -> 导出AssetIndex为JSON")
+        
+        # 读取资产列表
+        try:
+            with open('narrative_assets.json', 'r', encoding='utf-8-sig') as f:
+                assets_data = json.load(f)
+            assets = assets_data.get('assets', [])
+            print(f"[DEBUG] 读取到 {len(assets)} 个资产")
+        except FileNotFoundError:
+            print("[WARNING] 未找到 narrative_assets.json，使用空资产列表")
+            assets = []
+        except Exception as e:
+            print(f"[ERROR] 读取资产文件失败: {e}")
+            assets = []
+        
+        # 尝试从 narrative_steps.json 读取叙事数据作为备用
+        narrative_steps_file = 'narrative_steps.json'
+        if os.path.exists(narrative_steps_file):
+            try:
+                # 使用 utf-8-sig 编码来处理 UTF-8 BOM
+                with open(narrative_steps_file, 'r', encoding='utf-8-sig') as f:
+                    narrative_data = json.load(f)
+                print(f"[DEBUG] 从 {narrative_steps_file} 读取到叙事数据")
+            except Exception as e:
+                print(f"[WARNING] 读取 {narrative_steps_file} 失败: {e}")
+                narrative_data = None
+        else:
+            narrative_data = None
+        
+        # 解析叙事输入
+        steps = []
+        try:
+            # 尝试解析为JSON
+            narrative_json = json.loads(narrative_input)
+            if isinstance(narrative_json, dict):
+                steps = narrative_json.get("steps", [])
+                print(f"[DEBUG] 从输入解析到 {len(steps)} 个步骤")
+            else:
+                print("[WARNING] 叙事输入不是有效的JSON对象")
+        except json.JSONDecodeError as e:
+            print(f"[WARNING] 叙事输入JSON解析失败: {e}")
+            print(f"[DEBUG] 原始输入: {narrative_input[:200]}...")  # 只显示前200个字符
+        except Exception as e:
+            print(f"[WARNING] 叙事输入解析失败: {e}")
+        
+        # 如果从输入解析失败，尝试使用文件中的叙事数据
+        if not steps and narrative_data:
+            try:
+                steps = narrative_data.get("steps", [])
+                print(f"[DEBUG] 从文件备用数据解析到 {len(steps)} 个步骤")
+            except Exception as e:
+                print(f"[WARNING] 从文件备用数据解析失败: {e}")
+                steps = []
+        
+        # 组装输入 - 使用传递的assets数据而不是文件
+        agent_input = {
+            "steps": steps,
+            "assets": assets
+        }
+        
+        # 如果assets为空，尝试从传递的数据中获取
+        if not assets and isinstance(narrative_json, dict):
+            assets = narrative_json.get("assets", [])
+            agent_input["assets"] = assets
+            print(f"[DEBUG] 从传递数据中获取到 {len(assets)} 个资产")
+        
+        print(f"[DEBUG] 传递给场景Agent的输入: {json.dumps(agent_input, ensure_ascii=False, indent=2)}")
+        
+        # 只调用场景Agent
+        from scene_agent import create_scene_agent
+        agent = create_scene_agent()
+        response = agent.generate_reply(messages=[{"role": "user", "content": json.dumps(agent_input, ensure_ascii=False)}])
+        print("[场景Agent返回]", response)  # 调试输出
+        
+        # 处理返回结果
+        if isinstance(response, dict):
+            result = response.get("content", str(response))
+        elif isinstance(response, str):
+            result = response
+        else:
+            result = str(response)
+        
+        return jsonify({'result': result, 'status': 'success'})
+    except Exception as e:
+        return jsonify({'result': f'Error: {str(e)}', 'status': 'error'})
+
+@app.route('/generate_mechanics', methods=['POST'])
+def generate_mechanics():
+    try:
+        # 获取原始请求数据
+        raw_data = request.get_data().decode('utf-8')
+        print(f"[DEBUG] /generate_mechanics接收到的原始数据: {raw_data[:200]}..." if len(raw_data) > 200 else raw_data)
+        
+        # 尝试解析为JSON
+        try:
+            import json
+            # 如果是有效的JSON，使用它作为输入
+            parsed_json = json.loads(raw_data)
+            print(f"[DEBUG] 解析后的JSON: {json.dumps(parsed_json, ensure_ascii=False)[:200]}..." if len(json.dumps(parsed_json, ensure_ascii=False)) > 200 else json.dumps(parsed_json, ensure_ascii=False))
+            combined_input = raw_data  # 使用原始JSON字符串
+        except json.JSONDecodeError:
+            print("[DEBUG] 请求体不是有效的JSON字符串")
+            # 尝试从请求中获取input字段（兼容旧版本）
+            data = request.get_json() or {}
+            combined_input = data.get('input', '')
+            print(f"[DEBUG] 回退到input字段: {combined_input[:200]}..." if len(combined_input) > 200 else combined_input)
+        
+        from mechanism_agent import create_mechanism_agent
+        agent = create_mechanism_agent()
+        print(f"[DEBUG] 传递给Agent的内容: {combined_input[:200]}..." if len(combined_input) > 200 else combined_input)
+        response = agent.generate_reply(messages=[{"role": "user", "content": combined_input}])
+        if isinstance(response, dict):
+            result = response.get("content", str(response))
+        elif isinstance(response, str):
+            result = response
+        else:
+            result = str(response)
+        return jsonify({'result': result, 'status': 'success'})
+    except Exception as e:
+        print(f"[ERROR] /generate_mechanics处理失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'result': f'Error: {str(e)}', 'status': 'error'})
+
+@app.route('/llm', methods=['POST'])
+def call_llm():
+    try:
+        data = request.get_json() or {}
+        prompt = data.get('prompt', '')
+        
+        # 使用scene_agent来处理资产选择
+        from scene_agent import create_scene_agent
+        agent = create_scene_agent()
+        
+        # 解析prompt以提取查询信息
+        lines = prompt.split('\n')
+        query = ""
+        asset_names = []
+        
+        for line in lines:
+            if line.startswith('name:'):
+                # 提取资产名称
+                name_part = line.split(',')[0]
+                asset_name = name_part.replace('name:', '').strip()
+                asset_names.append(asset_name)
+            elif '选择最匹配的资产' in line:
+                # 提取查询
+                import re
+                match = re.search(r'为.*?"([^"]+)"', line)
+                if match:
+                    query = match.group(1)
+        
+        # 构建更适合scene_agent的输入格式
+        if query and asset_names:
+            # 创建简化的输入格式，让scene_agent专注于资产选择
+            simplified_input = {
+                "query": query,
+                "candidates": asset_names,
+                "task": "asset_selection"
+            }
+            
+            # 调用scene_agent
+            response = agent.generate_reply(messages=[{"role": "user", "content": f"请从以下候选资产中选择最匹配'{query}'的资产：{', '.join(asset_names)}。只返回资产名称。"}])
+        else:
+            # 如果无法解析，直接使用原始prompt
+            response = agent.generate_reply(messages=[{"role": "user", "content": prompt}])
+        
+        # 处理返回结果
+        if isinstance(response, dict):
+            result = response.get("content", str(response))
+        elif isinstance(response, str):
+            result = response
+        else:
+            result = str(response)
+        
+        # 清理结果，只保留资产名称
+        result = result.strip()
+        if result.startswith('"') and result.endswith('"'):
+            result = result[1:-1]
+        
+        return jsonify({'result': result, 'status': 'success'})
+    except Exception as e:
+        return jsonify({'result': f'Error: {str(e)}', 'status': 'error'})
+
+@app.route('/codegen', methods=['POST'])
+def codegen():
+    try:
+        data = request.get_json() or {}
+        input_text = data.get('input', '')
+        from codegen_agent import create_codegen_agent
+        agent = create_codegen_agent()
+        response = agent.generate_reply(messages=[{"role": "user", "content": input_text}])
+        if isinstance(response, dict):
+            result = response.get("content", str(response))
+        elif isinstance(response, str):
+            result = response
+        else:
+            result = str(response)
+        return jsonify({'result': result, 'status': 'success'})
+    except Exception as e:
+        return jsonify({'result': f'Error: {str(e)}', 'status': 'error'})
+
+@app.route('/generate_codegen', methods=['POST'])
+def generate_codegen():
+    try:
+        # 获取原始请求数据
+        raw_data = request.get_data().decode('utf-8')
+        print(f"[DEBUG] /generate_codegen接收到的原始数据: {raw_data[:200]}..." if len(raw_data) > 200 else raw_data)
+        
+        # 检查是否是Markdown代码块，如果是，则提取其中的内容
+        if raw_data.startswith('```'):
+            # 找到第一个换行符
+            first_newline = raw_data.find('\n')
+            if first_newline >= 0:
+                # 去掉第一行（```json或```等）
+                raw_data = raw_data[first_newline + 1:]
+                # 找到结束的```
+                end_marker = raw_data.rfind('```')
+                if end_marker >= 0:
+                    raw_data = raw_data[:end_marker].strip()
+        
+        # 尝试解析为JSON
+        input_text = raw_data
+        try:
+            import json
+            # 尝试解析JSON
+            parsed_json = json.loads(raw_data)
+            print(f"[DEBUG] 解析后的JSON: {json.dumps(parsed_json, ensure_ascii=False)[:200]}..." if len(json.dumps(parsed_json, ensure_ascii=False)) > 200 else json.dumps(parsed_json, ensure_ascii=False))
+            # 如果成功解析为JSON，则将其转换为字符串后传递给Agent
+            input_text = json.dumps(parsed_json, ensure_ascii=False)
+        except json.JSONDecodeError as e:
+            print(f"[DEBUG] 不是有效的JSON字符串: {e}")
+            # 如果不是JSON，则直接使用原始文本
+            pass
+        
+        from codegen_agent import create_codegen_agent
+        agent = create_codegen_agent()
+        print(f"[DEBUG] 传递给CodeGen Agent的内容: {input_text[:200]}..." if len(input_text) > 200 else input_text)
+        response = agent.generate_reply(messages=[{"role": "user", "content": input_text}])
+        if isinstance(response, dict):
+            result = response.get("content", str(response))
+        elif isinstance(response, str):
+            result = response
+        else:
+            result = str(response)
+        return jsonify({'result': result, 'status': 'success'})
+    except Exception as e:
+        print(f"[ERROR] /generate_codegen处理失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'result': f'Error: {str(e)}', 'status': 'error'})
+
+@app.route('/mechanics', methods=['POST'])
+def mechanics():
+    try:
+        data = request.get_json() or {}
+        input_text = data.get('input', '')
+        print(f"[DEBUG] /mechanics接收到的原始数据: {data}")
+        print(f"[DEBUG] /mechanics提取的input字段: {input_text[:200]}..." if len(input_text) > 200 else input_text)
+        
+        # 如果input_text是JSON字符串，尝试解析它
+        try:
+            import json
+            parsed_json = json.loads(input_text)
+            print(f"[DEBUG] 解析后的JSON: {json.dumps(parsed_json, ensure_ascii=False)[:200]}..." if len(json.dumps(parsed_json, ensure_ascii=False)) > 200 else json.dumps(parsed_json, ensure_ascii=False))
+        except:
+            print("[DEBUG] input不是有效的JSON字符串")
+        
+        from mechanism_agent import create_mechanism_agent
+        agent = create_mechanism_agent()
+        response = agent.generate_reply(messages=[{"role": "user", "content": input_text}])
+        if isinstance(response, dict):
+            result = response.get("content", str(response))
+        elif isinstance(response, str):
+            result = response
+        else:
+            result = str(response)
+        return jsonify({'result': result, 'status': 'success'})
+    except Exception as e:
+        print(f"[ERROR] /mechanics处理失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'result': f'Error: {str(e)}', 'status': 'error'})
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({'status': 'ok', 'message': 'Python Agent Server is running'})
+
+if __name__ == '__main__':
+    print("启动Python Agent服务器...")
+    print("API端点:")
+    print("- POST /generate_narrative")
+    print("- POST /generate_scene") 
+    print("- POST /generate_mechanics")
+    print("- POST /llm (使用Scene Agent进行资产选择)")
+    print("- POST /codegen")
+    print("- POST /generate_codegen")
+    print("- GET /health")
+    print("服务器地址: http://127.0.0.1:5000")
+    app.run(host='127.0.0.1', port=5000, debug=True) 
