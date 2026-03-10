@@ -1,51 +1,56 @@
-import autogen
-from llm_config import LLM_CONFIG, NARRATIVE_FINETUNED_CONFIG
 import sys
 import time
-import requests
+
+import autogen
+
+from llm_config import LLM_CONFIG
+
 
 def create_narrative_agent():
-    print("[DEBUG] Python路径:", sys.executable)
-    print("[DEBUG] autogen版本:", getattr(autogen, '__version__', '未知'))
+    print("[DEBUG] Python:", sys.executable)
+    print("[DEBUG] autogen:", getattr(autogen, "__version__", "unknown"))
+
     try:
-        import openai
-        print("[DEBUG] openai版本:", openai.__version__)
-    except ImportError:
-        print("[DEBUG] openai未安装")
-    print("[DEBUG] 使用微调后的模型配置:", NARRATIVE_FINETUNED_CONFIG)
-    print("[DEBUG] 开始创建NarrativeAgent...")
+        import openai  # noqa: F401
+
+        print("[DEBUG] openai:", getattr(openai, "__version__", "unknown"))
+    except Exception:
+        print("[DEBUG] openai: not available")
+
+    print("[DEBUG] Using Qwen (DashScope) config:", LLM_CONFIG)
+    print("[DEBUG] Creating NarrativeAgent...")
     start = time.time()
+
     agent = autogen.AssistantAgent(
         name="NarrativeAgent",
-        llm_config=NARRATIVE_FINETUNED_CONFIG,  # 使用微调后的模型
-        system_message="""
-你是叙事Agent，负责将用户输入的RPG故事设想扩展为完整的故事，并细分为多个步骤。
-
-重要规则：
-- 只有第一章（step 1）包含主角（Hero/MainCharacter）
-- 其他章节（step 2及以后）默认不出现主角，主要包含敌人、NPC等角色
-- 每个章节应该有不同的角色组合，避免重复
-
-请严格按照如下JSON格式输出：
-{
-  "story": "[完整的故事背景、主要情节、世界观等]",
-  "steps": [
-    {
-      "step": 1,
-      "title": "The Beginning: New Adventure",
-      "location": 0,
-      "objective": "[本步骤的主要目标]",
-      "key_characters": ["[主要角色1]", "[主要角色2]"],
-      "main_dialogues": [
-        {"character": "[角色名]", "dialogue": "[一句主要对话]"}
-      ],
-      "key_items": ["[关键物品1]", "[关键物品2]"]
-    }
-  ]
-}
-
-location字段必须为数字，且只能为：0=Village, 1=Forest, 2=Grassland, 3=Castle, 4=Cave。
-"""
+        llm_config=LLM_CONFIG,
+        system_message=(
+            "You are a narrative agent. Expand the user's RPG story idea into a complete story and a step breakdown.\n"
+            "\n"
+            "Rules:\n"
+            "- Only step 1 can include the MainCharacter (hero).\n"
+            "- Steps 2+ should not include the MainCharacter; use NPCs/enemies instead.\n"
+            "- Use 4-5 steps.\n"
+            "\n"
+            "Return ONLY valid JSON with this exact schema:\n"
+            "{\n"
+            "  \"story\": \"...\",\n"
+            "  \"steps\": [\n"
+            "    {\n"
+            "      \"step\": 1,\n"
+            "      \"title\": \"...\",\n"
+            "      \"location\": 0,\n"
+            "      \"objective\": \"...\",\n"
+            "      \"key_characters\": [\"...\"],\n"
+            "      \"main_dialogues\": [{\"character\": \"...\", \"dialogue\": \"...\"}],\n"
+            "      \"key_items\": [\"...\"]\n"
+            "    }\n"
+            "  ]\n"
+            "}\n"
+            "\n"
+            "location must be an integer: 0=Village, 1=Forest, 2=Grassland, 3=Castle, 4=Cave.\n"
+        ),
     )
-    print("[DEBUG] NarrativeAgent创建完成，用时:", time.time() - start, "秒")
-    return agent 
+
+    print("[DEBUG] NarrativeAgent created in", time.time() - start, "s")
+    return agent
