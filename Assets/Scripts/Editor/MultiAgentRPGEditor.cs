@@ -815,7 +815,11 @@ public class MultiAgentRPGEditor : EditorWindow
             GUI.enabled = true;
             if (GUILayout.Button("Clear Narrative"))
             {
-                narrativeData = null;
+                if (narrativeData == null)
+                    narrativeData = new NarrativeData();
+                narrativeData.story = "";
+                narrativeData.steps = new List<NarrativeStep>();
+                narrativeResult = "";
                 isNarrativeComplete = false;
             }
             EditorGUILayout.EndHorizontal();
