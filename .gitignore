@@ -8,11 +8,15 @@
 !python_agents/
 !python_agents/**
 
+# But ignore python caches and local artifacts
+python_agents/__pycache__/
+python_agents/.cache/
+*.pyc
+
 # Allow Unity scripts only
 !Assets/
 !Assets/Scripts/
 !Assets/Scripts/**
-!Assets.meta
 !Assets/Scripts.meta
 
 # Optional: keep .vscode ignored
