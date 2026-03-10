@@ -3,6 +3,7 @@
 
 # Allow git metadata files
 !.gitignore
+!README.md
 
 # Allow python agents
 !python_agents/
